@@ -64,13 +64,12 @@ def decode():
 def encode():
     img = Image.open("TestImage.jpg")
     img = img.rotate(180)
-    encodedImg = Image.new('RGBA',(img.width,img.height))
+    encodedImg = Image.new('RGB',(img.width,img.height))
 
     # make an rgba copy of the image
-    rgbImg = img.convert("RGBA")
+    rgbImg = img.convert("RGB")
 
-    msg = "Heisenburg I am the one who knocks"
-
+    msg = "security sucks"
 
     # find the length of the msg
     msgLength = len(msg)*8
@@ -106,7 +105,7 @@ def encode():
     for i in range(img.height):
         for j in range(img.width):
             # get the rgba value of each pixel
-            (r,g,b,a) = rgbImg.getpixel((j,i))
+            (r,g,b) = rgbImg.getpixel((j,i))
 
             # convert rgb into 8 bit format
             r = '{0:08b}'.format(r)
@@ -141,7 +140,7 @@ def encode():
             g = int(g,2)
             b = int(b,2)
 
-            encodedImg.putpixel((j,i),(r,g,b,a))
+            encodedImg.putpixel((j,i),(r,g,b))
 
     # reflip the image
     encodedImg = encodedImg.rotate(180)
