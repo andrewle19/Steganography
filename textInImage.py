@@ -1,8 +1,13 @@
-from PIL import Image
+# Author: Andrew Le
+# email: andrewle19@csu.fullerton.edu
 
-def decode():
+
+from PIL import Image
+import argparse
+
+def decode(filename):
     # open and rotate the image
-    img = Image.open("Secret.png")
+    img = Image.open(filename)
     img = img.rotate(180)
 
     # rgb copy of the image
@@ -30,11 +35,13 @@ def decode():
     #print(msgLengthBits)
     msgLength = int("".join(map(str,msgLengthBits)),2)
     print("The text is",msgLength,"bits long")
-    print("Or",msgLength/8,"characters long")
+    print("Or",msgLength/8,"characters long\n")
+
 
     byte = []
     msg = []
     count = 0
+
     # loop through rest of bits starting at bit right after
     # the lengths are stored
     for i in range(33, 34 + msgLength):
@@ -51,7 +58,8 @@ def decode():
         if (count == 8):
             msgIntValue = int("".join(map(str,byte)), 2)
             msg.append(chr(msgIntValue))
-            print(byte)
+
+            # print(byte) use this to print the bit/byte layout
 
             del byte[:]
             count = 0
@@ -61,15 +69,16 @@ def decode():
 
     return
 
-def encode():
-    img = Image.open("TestImage.jpg")
+def encode(filename,outputfile,text):
+    img = Image.open(filename)
+    # rotate img so we can write bits from top left to bottom right
     img = img.rotate(180)
+    # create new png img
     encodedImg = Image.new('RGB',(img.width,img.height))
 
     # make an rgba copy of the image
     rgbImg = img.convert("RGB")
-
-    msg = "security sucks"
+    msg = str(text)
 
     # find the length of the msg
     msgLength = len(msg)*8
@@ -97,11 +106,11 @@ def encode():
     index = 0
 
     binMsg = list(msgLength) + binMsg
-    print(binMsg)
+    # to print bits/bytes messed with
+    # print(binMsg)
 
     # loop through entire image placing the msg
     #in the least Sig Bit of the image
-
     for i in range(img.height):
         for j in range(img.width):
             # get the rgba value of each pixel
@@ -112,6 +121,8 @@ def encode():
             g = '{0:08b}'.format(g)
             b = '{0:08b}'.format(b)
 
+            # loop through 1 pixels or 24 bits/3 bytes at a time
+            # going through from R to G to B
             for k in range(0,3):
                 if(index < len(binMsg)):
 
@@ -119,7 +130,6 @@ def encode():
                         r = r[:7]
                         r += binMsg[index]
                         index += 1
-
 
                     if((k+1)%3 == 2):
                         g = g[:7]
@@ -131,44 +141,35 @@ def encode():
                         b += binMsg[index]
                         index += 1
 
-
-
-
-
-
+            #convert binaries back to int base 10
             r = int(r,2)
             g = int(g,2)
             b = int(b,2)
+
 
             encodedImg.putpixel((j,i),(r,g,b))
 
     # reflip the image
     encodedImg = encodedImg.rotate(180)
 
-    encodedImg.save('Secret.png',"PNG")
+    encodedImg.save(str(outputfile)+".png","PNG")
 
+    # print(len(binMsg))
+    print("Message Encoded in Image")
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Hides message in image")
+    parser.add_argument("-e","--encode", action="store_true")
+    parser.add_argument("-d","--decode",action="store_true")
+    parser.add_argument('image',help="Image to hide text in(jpg)")
+    parser.add_argument('-o',"--output",help="Name of Output File(no extension)")
+    parser.add_argument("-t","--text",help="Message to Encode in file")
 
+    args = parser.parse_args()
 
-    print(len(binMsg))
-
-    # r = '{0:08b}'.format(r)
-    # r = r[:7]
-    # # r += binMsg[0][1]
-    # print(int(r,2))
-    # for i in range(img.height):
-    #     for j in range(img.width):
-    #         if(count < len(msgLength)):
-    #             (r,g,b,a) = rgbImg.getpixel((j,i))
-    #             r = '{0:08b}'.format(r)
-    #             g = '{0:08b}'.format(g)
-    #             b = '{0:08b}'.format(b)
-
-
-
-
-
-
-
-encode()
-decode()
+    if args.encode and args.image and args.text and args.output:
+        encode(args.image,args.output,args.text)
+    elif args.decode:
+        decode(args.image)
+    else:
+        print("Usage Error See ReadMe")
